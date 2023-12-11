@@ -9,6 +9,7 @@ import urllib
 from box import Box
 
 from memgpt.local_llm.chat_completion_proxy import get_chat_completion
+from memgpt.constants import CLI_WARNING_PREFIX
 
 MODEL_TO_AZURE_ENGINE = {
     "gpt-4-1106-preview": "gpt-4",
@@ -178,8 +179,8 @@ def azure_openai_chat_completions_request(resource_name, deployment_id, api_vers
     from memgpt.utils import printd
 
     resource_name = clean_azure_endpoint(resource_name)
+    #url = f"https://{resource_name}.openai.azure.com/openai/deployments/{deployment_id}/chat/completions?api-version={api_version}"
     url = f"https://{resource_name}/openai/deployments/{deployment_id}/chat/completions?api-version={api_version}"
-    #print("url:", url)
     headers = {"Content-Type": "application/json", "api-key": f"{api_key}"}
 
     # If functions == None, strip from the payload
@@ -225,10 +226,12 @@ def azure_openai_chat_completions_request(resource_name, deployment_id, api_vers
 
 
 def azure_openai_embeddings_request(resource_name, deployment_id, api_version, api_key, data):
+    print("--azure_openai_embeddings_request--")
     """https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#embeddings"""
     from memgpt.utils import printd
 
     resource_name = clean_azure_endpoint(resource_name)
+    #url = f"https://{resource_name}.openai.azure.com/openai/deployments/{deployment_id}/embeddings?api-version={api_version}"
     url = f"https://{resource_name}/openai/deployments/{deployment_id}/embeddings?api-version={api_version}"
     headers = {"Content-Type": "application/json", "api-key": f"{api_key}"}
 
@@ -304,7 +307,10 @@ def retry_with_exponential_backoff(
                     delay *= exponential_base * (1 + jitter * random.random())
 
                     # Sleep for the delay
-                    printd(f"Got a rate limit error ('{http_err}') on LLM backend request, waiting {int(delay)}s then retrying...")
+                    # printd(f"Got a rate limit error ('{http_err}') on LLM backend request, waiting {int(delay)}s then retrying...")
+                    print(
+                        f"{CLI_WARNING_PREFIX}Got a rate limit error ('{http_err}') on LLM backend request, waiting {int(delay)}s then retrying..."
+                    )
                     time.sleep(delay)
                 else:
                     # For other HTTP errors, re-raise the exception
